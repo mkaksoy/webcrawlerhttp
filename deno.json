@@ -1,0 +1,5 @@
+{
+  "imports": {
+    "jest": "npm:jest@^29.7.0"
+  }
+}
