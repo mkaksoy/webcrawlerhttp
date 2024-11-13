@@ -6,16 +6,15 @@ import { assertEquals } from "https://deno.land/std@0.224.0/testing/asserts.ts";
 Deno.test("normalizeURL strip protocol", () => {
   const input = "https://test.example.com/path";
 
-  const actual = normalizeURL(input);
+  const actual = normalizeURL({ url: input });
   const expected = "test.example.com/path";
 
-  
   assertEquals(actual, expected);
 });
 
 Deno.test("normalizeURL strip trailing slash", () => {
   const input = "https://test.example.com/path/";
-  const actual = normalizeURL(input);
+  const actual = normalizeURL({ url: input });
   const expected = "test.example.com/path";
 
   assertEquals(actual, expected);
@@ -23,7 +22,7 @@ Deno.test("normalizeURL strip trailing slash", () => {
 
 Deno.test("normalizeURL capitals", () => {
   const input = "HTTPS://TEST.EXAMPLE.COM/PATH";
-  const actual = normalizeURL(input);
+  const actual = normalizeURL({ url: input });
   const expected = "test.example.com/path";
 
   assertEquals(actual, expected);
@@ -31,7 +30,7 @@ Deno.test("normalizeURL capitals", () => {
 
 Deno.test("normalizeURL strip http", () => {
   const input = "http://test.example.com/path";
-  const actual = normalizeURL(input);
+  const actual = normalizeURL({ url: input });
   const expected = "test.example.com/path";
 
   assertEquals(actual, expected);
@@ -47,8 +46,11 @@ Deno.test("getURLsFromHTML absolute", () => {
     </html>
   `;
   const input = "https://example.com/";
-  const actual = getURLsFromHTML(HTMLBody, input);
-  const expected: string[] = ["https://example.com/", "https://test1.example.com/"];
+  const actual = getURLsFromHTML({ body: HTMLBody, baseUrl: input });
+  const expected: string[] = [
+    "https://example.com/",
+    "https://test1.example.com/",
+  ];
 
   assertEquals(actual, expected);
 });
@@ -63,8 +65,11 @@ Deno.test("getURLsFromHTML relative", () => {
     </html>
   `;
   const input = "https://example.com";
-  const actual = getURLsFromHTML(HTMLBody, input);
-  const expected: string[] = ["https://example.com/path1/", "https://example.com/path2/"];
+  const actual = getURLsFromHTML({ body: HTMLBody, baseUrl: input });
+  const expected: string[] = [
+    "https://example.com/path1/",
+    "https://example.com/path2/",
+  ];
 
   assertEquals(actual, expected);
 });
@@ -79,8 +84,11 @@ Deno.test("getURLsFromHTML both", () => {
     </html>
   `;
   const input = "https://example.com";
-  const actual = getURLsFromHTML(HTMLBody, input);
-  const expected: string[] = ["https://example.com/path/", "https://example.com/path/"];
+  const actual = getURLsFromHTML({ body: HTMLBody, baseUrl: input });
+  const expected: string[] = [
+    "https://example.com/path/",
+    "https://example.com/path/",
+  ];
 
   assertEquals(actual, expected);
 });
@@ -94,7 +102,7 @@ Deno.test("getURLsFromHTML invalid", () => {
     </html>
   `;
   const input = "https://example.com/";
-  const actual = getURLsFromHTML(HTMLBody, input);
+  const actual = getURLsFromHTML({ body: HTMLBody, baseUrl: input });
   const expected: string[] = [];
 
   assertEquals(actual, expected);

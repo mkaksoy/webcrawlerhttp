@@ -1,20 +1,31 @@
 "use strict";
 
-async function crawl(baseUrl: string, url: string, pages: Record<string, number>): Promise<Record<string, number>> {
+import {
+  CrawlOptions,
+  PagesRecord,
+  GetURLsFromHTMLOptions,
+  NormalizeURLOptions,
+} from "../types/crawler.types.ts";
+
+const crawl = async ({
+  baseUrl,
+  url,
+  pages,
+}: CrawlOptions): Promise<PagesRecord> => {
   const baseUrlObj = new URL(baseUrl);
   const currentUrlObj = new URL(url);
+
   if (baseUrlObj.hostname !== currentUrlObj.hostname) {
     return pages;
   }
 
-  const normalizedCurrentUrl: string = normalizeURL(url);
+  const normalizedCurrentUrl: string = normalizeURL({ url });
   if (pages[normalizedCurrentUrl] > 0) {
     pages[normalizedCurrentUrl]++;
     return pages;
   }
 
-  pages[normalizedCurrentUrl] = 1
-
+  pages[normalizedCurrentUrl] = 1;
   console.log("Actively crawling: " + url);
 
   try {
@@ -32,60 +43,54 @@ async function crawl(baseUrl: string, url: string, pages: Record<string, number>
     }
 
     const body = await response.text();
-
-    const nextURLs: string[] = getURLsFromHTML(body, baseUrl);
+    const nextURLs: string[] = getURLsFromHTML({ body, baseUrl });
 
     for (const nextURL of nextURLs) {
-      pages = await crawl(baseUrl, nextURL, pages)
+      pages = await crawl({ baseUrl, url: nextURL, pages });
     }
   } catch (err: unknown) {
     if (err instanceof Error) {
       console.error(`Failed to fetch URL: ${url}, error: ${err.message}`);
     } else {
-      console.error(`Failed to feth URL: ${url}, error: ${String(err)}`);
+      console.error(`Failed to fetch URL: ${url}, error: ${String(err)}`);
     }
   }
 
   return pages;
-}
+};
 
-function getURLsFromHTML(body: string, baseUrl: string): string[] {
+const getURLsFromHTML = ({
+  body,
+  baseUrl,
+}: GetURLsFromHTMLOptions): string[] => {
   const urlMatches = Array.from(body.matchAll(/<a[^>]+href="([^"]+)"/g));
   const urls: string[] = [];
 
   for (const match of urlMatches) {
     const link = match[1];
-    if (link.startsWith("/")) {
-      // Relative
+    const isRelativeLink = link.startsWith("/");
+    const isAbsoluteLink = link.startsWith("http");
+
+    if (isRelativeLink || isAbsoluteLink) {
       try {
-        const urlObj = new URL(baseUrl + link);
-        urls.push(urlObj.href);
+        const url = isRelativeLink ? new URL(baseUrl + link) : new URL(link);
+        urls.push(url.href);
       } catch (err) {
-        console.error(`Invalid relative link: ${link}, error: ${err}`);
-      }
-    } else if (link.startsWith("http")) {
-      // Absolute
-      try {
-        const urlObj = new URL(link);
-        urls.push(urlObj.href);
-      } catch (err) {
-        console.error(`Invalid absolute link: ${link}, error: ${err}`);
+        const errorMessage = isRelativeLink
+          ? `Invalid relative link: ${link}`
+          : `Invalid absolute link: ${link}`;
+        console.error(`${errorMessage}, error: ${err}`);
       }
     }
   }
 
   return urls;
-}
+};
 
-function normalizeURL(url: string): string {
+const normalizeURL = ({ url }: NormalizeURLOptions): string => {
   const urlObj: URL = new URL(url);
   const path: string = (urlObj.host + urlObj.pathname).toLowerCase();
-
-  if (path.length > 0 && path.slice(-1) === "/") {
-    return path.slice(0, -1);
-  } else {
-    return path;
-  }
-}
+  return path.endsWith("/") ? path.slice(0, -1) : path;
+};
 
 export { normalizeURL, getURLsFromHTML, crawl };

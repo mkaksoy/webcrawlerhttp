@@ -1,20 +1,23 @@
 "use strict";
 
-function report(pages: Record<string, number>) {
-    console.log("|====================|\n|== CRAWLER REPORT ==|\n|====================|");
-    const sortedPages = sort(pages);
+import { ReportOptions, PageOptions } from "../types/report.types.ts";
 
-    for (const [url, count] of sortedPages) {
-      console.log(`Found ${count} links to page: ${url}`);
-    }
-  
+function report({ pages }: ReportOptions) {
+  const sortedPages = Object.entries(pages).sort(
+    (a, b) => (a[1] as number) - (b[1] as number)
+  );
+
+  console.log(
+    `\n\n|============================|\n|====== CRAWLER REPORT ======|\n|============================|`
+  );
+
+  for (const [url, count] of sortedPages) {
+    console.log(`Found ${count} links to page: ${url}`);
+  }
 }
 
-function sort(pages: Record<string, number>) {
-  const pagesArray = Object.entries(pages);
-  return pagesArray.sort((a, b) => {
-    return (a[1] as number) - (b[1] as number);
-  });
+function sort(pages: PageOptions): [string, number][] {
+  return Object.entries(pages).sort((a, b) => a[1] - b[1]);
 }
 
 export { sort, report };

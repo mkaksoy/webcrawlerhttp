@@ -12,9 +12,9 @@ async function main() {
   } else {
     for (const [index, url] of Deno.args.entries()) {
       console.log(`Starting crawl of website ${index + 1}: ${url}...`);
-      const pages = await crawl(url, url, {});
+      const pages = await crawl({ baseUrl: url, url, pages: {} });
 
-      report(pages)
+      report({ pages });
     }
   }
 }
