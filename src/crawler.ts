@@ -1,5 +1,32 @@
 "use strict";
 
+async function crawl(url: string) {
+  console.log("Actively crawling: " + url);
+
+  try {
+    const response: Response = await fetch(url);
+    const type: string | null = response.headers.get("content-type");
+
+    if (response.status > 399) {
+      console.error(
+        `Failed to fetch URL: ${url}, status code: ${response.status}`
+      );
+      return;
+    } else if (type && !type.includes("text/html")) {
+      console.error(`Received non-HTML response: ${url}, ${type}`);
+      return;
+    }
+
+    console.log(await response.text());
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      console.error(`Failed to fetch URL: ${url}, error: ${err.message}`);
+    } else {
+      console.error(`Failed to feth URL: ${url}, error: ${String(err)}`);
+    }
+  }
+}
+
 function getURLsFromHTML(body: string, baseUrl: string): string[] {
   const urlMatches: RegExpExecArray[] = Array.from(
     body.matchAll(/href="([^"]+)"/g)
@@ -41,4 +68,4 @@ function normalizeURL(url: string): string {
   }
 }
 
-export { normalizeURL, getURLsFromHTML };
+export { normalizeURL, getURLsFromHTML, crawl };
