@@ -1,6 +1,7 @@
 "use strict";
 
 import { crawl } from "./src/crawler.ts";
+import { report } from "./src/report.ts";
 
 async function main() {
   const count = Deno.args.length;
@@ -13,7 +14,7 @@ async function main() {
       console.log(`Starting crawl of website ${index + 1}: ${url}...`);
       const pages = await crawl(url, url, {});
 
-      console.log(pages);
+      report(pages)
     }
   }
 }
